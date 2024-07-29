@@ -69,9 +69,9 @@ int main(int argc, char* argv[]) {
         std::string time_discretization_str = config["time_discretization"].as<std::string>();
         time_discretization = (time_discretization_str == "Uniform") ? Uniform : Chebyshev;
 
-        gp.swingfoot_midstep_z_des = config["swingfoot_midstep_z_des"].as<double>();
-        gp.swingfoot_begin_y_des = config["swingfoot_begin_y_des"].as<double>();
-        gp.swingfoot_end_y_des = config["swingfoot_end_y_des"].as<double>();
+        gp.swingfoot_midstep_z_des = config["step_height"].as<double>();
+        gp.swingfoot_begin_y_des = config["step_length"].as<double>() * 0.5;
+        gp.swingfoot_end_y_des = -config["step_length"].as<double>() * 0.5;
     } 
     catch (std::exception& e) {
         std::cerr << "Error parsing YAML file: " << e.what() << std::endl;
@@ -171,23 +171,42 @@ int main(int argc, char* argv[]) {
     // Print the solution
     const int N_reachsets = 128;
     if (mynlp->solution.size() == mynlp->numVars) {
-        BezierCurves newTraj(T, 
-                             N_reachsets, 
-                             NUM_INDEPENDENT_JOINTS, 
-                             TimeDiscretization::Uniform, 
-                             degree);
-
-        newTraj.compute(mynlp->solution);
-
-        std::ofstream trajectory(filepath + "trajectory-digit.txt");
-        trajectory << std::setprecision(20);
-        for (int i = 0; i < NUM_INDEPENDENT_JOINTS; i++) {
-            for (int j = 0; j < N_reachsets; j++) {
-                trajectory << newTraj.q(j)(i) << ' ';
+        // Evaluate the solution on a finer time discretization
+        try {
+            SmartPtr<DigitSingleStepOptimizer> testnlp = new DigitSingleStepOptimizer();
+            testnlp->set_parameters(z,
+                                    T,
+                                    N_reachsets,
+                                    TimeDiscretization::Uniform,
+                                    degree,
+                                    model,
+                                    jtype,
+                                    gp);
+            Index n, m, nnz_jac_g, nnz_h_lag;
+            TNLP::IndexStyleEnum index_style;
+            testnlp->get_nlp_info(n, m, nnz_jac_g, nnz_h_lag, index_style);
+            Number ztry[testnlp->numVars], x_l[testnlp->numVars], x_u[testnlp->numVars];
+            Number g[testnlp->numCons], g_lb[testnlp->numCons], g_ub[testnlp->numCons];
+            for (int i = 0; i < testnlp->numVars; i++) {
+                ztry[i] = mynlp->solution[i];
             }
-            trajectory << std::endl;
+            testnlp->get_bounds_info(testnlp->numVars, x_l, x_u, testnlp->numCons, g_lb, g_ub);
+            testnlp->eval_g(testnlp->numVars, ztry, false, testnlp->numCons, g);
+
+            std::ofstream trajectory(filepath + "trajectory-digit.txt");
+            const auto& cidPtr_ = testnlp->cidPtr_;
+            for (int i = 0; i < NUM_JOINTS; i++) {
+                for (int j = 0; j < N_reachsets; j++) {
+                    trajectory << cidPtr_->q(j)(i) << ' ';
+                }
+                trajectory << std::endl;
+            }
+            trajectory.close();
         }
-        trajectory.close();
+        catch (std::exception& e) {
+            std::cerr << e.what() << std::endl;
+            throw std::runtime_error("Error evaluating the solution on a finer time discretization! Check previous error message!");
+        }
     }
 
     return 0;

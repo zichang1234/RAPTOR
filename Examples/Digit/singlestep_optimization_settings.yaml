@@ -12,33 +12,20 @@ degree: 5
 
 ### Gait behavior settings
   # step height (in the middle of the gait)
-swingfoot_midstep_z_des: 0.15
+  # suggested range: 0.05 ~ 0.3
+step_height: 0.3
 
-  # position with respect to the forward direction of the robot at the beginning
-swingfoot_begin_y_des: 0.30
-
-  # position with respect to the forward direction of the robot at the end
-swingfoot_end_y_des: -0.30  
-
-  # examples:
-  # 1. swingfoot_begin_y_des/swingfoot_end_y_des being positive 
-  #    means the swing foot is in front of the robot.
-  # 2. swingfoot_begin_y_des/swingfoot_end_y_des being negative 
-  #    means the swing foot is behind the robot.
-  # 3. swingfoot_begin_y_des being negative, and swingfoot_end_y_des being positive 
-  #    means the robot is walking forward.
-  # 4. swingfoot_begin_y_des being positive, and swingfoot_end_y_des being negative
-  #    means the robot is walking backward.
-  # 5. For periodic gaits, the absolute values of swingfoot_begin_y_des and swingfoot_end_y_des should be the same,
-  #    since the gait should be symmetric.
-  #    Otherwise, you need to turn off or change the periodicity reset map constraint.
+  # total step length from the beginning to the end of the gait
+  # walk backward if negative
+  # suggested range: 0 - 0.7
+step_length: 0.7
 
 ### Ipopt Optimization settings
   # terminal condition 1: optimality tolerance
 tol: 1e-5
 
   # terminal condition 2: constraint violation tolerance
-constr_viol_tol: 5e-5
+constr_viol_tol: 1e-4
 
   # terminal condition 3: maximum wall time
 max_wall_time: 1000.0
