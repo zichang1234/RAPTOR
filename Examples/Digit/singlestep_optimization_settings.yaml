@@ -15,10 +15,10 @@ degree: 5
 swingfoot_midstep_z_des: 0.15
 
   # position with respect to the forward direction of the robot at the beginning
-swingfoot_begin_y_des: 0.20
+swingfoot_begin_y_des: 0.30
 
   # position with respect to the forward direction of the robot at the end
-swingfoot_end_y_des: -0.20  
+swingfoot_end_y_des: -0.30  
 
   # examples:
   # 1. swingfoot_begin_y_des/swingfoot_end_y_des being positive 
@@ -38,13 +38,13 @@ swingfoot_end_y_des: -0.20
 tol: 1e-5
 
   # terminal condition 2: constraint violation tolerance
-constr_viol_tol: 1e-4
+constr_viol_tol: 5e-5
 
   # terminal condition 3: maximum wall time
 max_wall_time: 1000.0
 
   # terminal condition 4: maximum number of iterations
-max_iter: 500
+max_iter: 200
 
   # scale the objective function
 obj_scaling_factor: 1e-3
